@@ -123,6 +123,13 @@ function Computer() {
 var human = new Human();
 var computer = new Computer();
 
+// Function to generate random number (between -2 and 2) for the initial y component of the velocity
+// The initial x component of velocity will be the same in all cases
+function randomVelocity(){
+	var num = Math.floor(Math.random()*5) + 1; // this will get a number between 1 and 3;
+	num *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
+	return num;
+}
 
 // Ball Object Constructor
 function Ball() {
@@ -138,8 +145,8 @@ function Ball() {
 		bottom: this.y + 10
 	}
 
-	this.velocity_x = -5;
-	this.velocity_y = 0;
+	this.velocity_x = -3;
+	this.velocity_y = randomVelocity();
 }
 
 Ball.prototype.render = function () {
@@ -179,12 +186,24 @@ Ball.prototype.update = function (human, computer) {
 
 	if (this.edge.right === p2.edge.left){
 		if (this.edge.top < p2.edge.bottom && this.edge.bottom > p2.edge.top) {
-			console.log('collisi	on detected');
+			console.log('collision detected');
 			this.velocity_x = -this.velocity_x;
 		}
 		else {
 			console.log('missed the paddle');
 		}
+	}
+	
+	// Collision with top boundary
+	if (this.edge.top === 20){
+		console.log('Collision with top boundary');
+		this.velocity_y = -this.velocity_y;
+	}
+	
+	// Collision with bottom boundary
+	if (this.edge.bottom === 480){
+		console.log('Collision with bottom boundary');
+		this.velocity_y = -this.velocity_y;
 	}
 
 };
