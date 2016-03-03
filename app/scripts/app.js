@@ -10,7 +10,7 @@ context.strokeRect(25, 25, 600, 450);
 
 
 // Player Object constructor
-function Player(x, y){
+function Player(x, y) {
   this.x = x;
   this.y = y;
   this.color = "#846863";
@@ -20,17 +20,12 @@ function Player(x, y){
 		context.beginPath();
 		context.fillStyle = this.color;
 		context.fillRect(this.x, this.y, this.width, this.height);		
-	}
+	};
 }
 
 // Declaring a human and computer paddle
 var human = new Player(35, 200);
 var computer = new Player(600, 200);
-
-// Calling render function to draw paddles
-human.render();
-computer.render();
-
 
 
 // Ball Object Constructor
@@ -44,11 +39,18 @@ function Ball(){
     context.beginPath();
     context.arc(this.x, this.y, this.radius, 0, 2*Math.PI, false);
     context.fill();
-	}
+	};
 }
 
 // Declaring a new ball
 var ball = new Ball();
 
-// Rendering the new ball
-ball.render();
+var render = function() {
+	human.render();
+	computer.render();
+	ball.render();
+}
+
+window.onload = function(){
+	render();
+};
