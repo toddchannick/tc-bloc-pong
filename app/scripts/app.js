@@ -264,26 +264,6 @@ Ball.prototype.update = function (human, computer) {
 		}
 	}
 
-//		 If ball's left edge is equal to the right edge of the paddle
-//		 AND if the ball if within the paddles top and bottom edges ---> COLLISION
-	
-//	if ((this.x) <= human.paddle.x + human.paddle.width) {
-//		console.log('plane is crossed');
-//		if ((this.y - 10) < (human.paddle.y + human.paddle.height) && (this.y + 10) > human.paddle.y) {
-//			console.log('collision with human paddle detected');
-//
-//			this.x = (human.paddle.x + human.paddle.width);
-//			this.speed += (human.paddle.velocity_y/2);
-//			this.velocity_x = -this.velocity_x;
-//			this.velocity_y = -this.velocity_y;
-//
-//		} else {
-//			console.log('missed the paddle, point for computer');
-////			this.x = 325;
-////			this.y = 250;
-//		}
-//	}
-//
 	if ((this.x + this.radius) >= computer.paddle.x) {
 		if ((this.y - this.radius) < (computer.paddle.y + computer.paddle.height) && (this.y + this.radius) > computer.paddle.y) {
 			console.log('collision with computer paddle detected');
@@ -299,18 +279,6 @@ Ball.prototype.update = function (human, computer) {
 	}
 
 };
-
-//Ball.prototype.serve = function(side) {
-//	var r = Math.random();
-//	this.x = side === 1 ? human.paddle.x : this.radius;
-//	this.y = (480 - this.radius) * r;
-//	
-//	var phi = 0.1 * pi * (1 - 2*r);
-//	this.velocity_x = side*this.speed * Math.cos(phi);
-//	this.velocity_y = this.speed * Math.sin(phi);
-//};
-
-// Update function which runs during repaint with updated positions
 
 var update = function () {
 	ball.update(human, computer);
