@@ -1,3 +1,32 @@
+html {
+	overflow:hidden;
+}
+
+body {
+	background-color:#4C3C39;
+  font-family: 'verdana';
+  width: 100%;
+  min-width: 565px;
+}
+
+.header {
+	color:white;
+	margin-top:40px;
+  font-weight: bold;
+	text-align:center;
+}
+
+.header h1 {
+	text-transform: uppercase;
+	margin-bottom:0px !important;
+}
+
+.header h3 {
+	margin-top:5px;
+	margin-bottom:25px;
+	opacity:0.5;
+}
+
 #container {
 	width:80%;
 	margin-left:auto;
@@ -7,5 +36,33 @@
 
 
 #game-canvas {
-	margin-top:10%;
+	border:5px solid black;
+}
+
+#end-game {
+	color: white;
+	text-align: center;
+	font-size: 30px;
+	font-weight: bold;
+	background-color: black;
+	position: relative;
+	padding-top:200px;
+	width:755px;
+	height:310px;
+	bottom:515px;
+	left:45px;
+	border: 5px solid #9EE493;
+}
+
+#end-game-text {
+	margin-top:250px;
+}
+
+#play-again {
+	cursor:pointer;
+	font-size:20px;
+}
+
+#play-again:hover {
+	color: #9EE493;
 }

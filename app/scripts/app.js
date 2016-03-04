@@ -1,40 +1,63 @@
 var canvas;
 var context;
 // width and height of canvas
-var W = 650,
+var W = 750,
 	H = 500;
+var pi = Math.PI;
 
-// Initialize the game canvas
-function init() {
-	canvas = document.getElementById('game-canvas');
-	context = canvas.getContext('2d');
-	canvas.width = W;
-	canvas.height = H;
+var score = {
+	human: 0,
+	computer: 0
+};
+
+canvas = document.getElementById('game-canvas');
+context = canvas.getContext('2d');
+canvas.width = W;
+canvas.height = H;
+
+
+function drawScore() {
+	context.globalAlpha=0.2;
+	context.font = "bold 80px Verdana";
+	context.fillStyle = "#1C4934";
+	context.fillText(score.human, 8, 100);
+	context.fillText(score.computer, 670, 100);
+	context.globalAlpha=1;
 }
+
 
 // Paint the game canvas background
 function paintCanvas() {
-	context.fillStyle = "#E1EFE7";
+	context.fillStyle = "#9EE493";
 	context.fillRect(0, 0, W, H);
+	context.font = "bold 16px Verdana";
+	context.fillStyle = "#1C4934";
+	context.fillText("Player", 8, 20);
+	context.fillText("Computer", 650, 20);
 }
 
 // Draws the game board (boundaries)
-function drawBoundaries() {
-	context.beginPath();
-	context.lineWidth = 4;
-	context.strokeStyle = 'black';
-	context.strokeRect(20, 20, 610, 460);
+function drawNet() {
+	context.fillStyle = 'black';
+	var w = 4;
+	var x = (W - w)*0.5;
+	var y = 0;
+	var step = H/30;
+	while (y < H){
+		context.fillRect(x, y+step*.25, w, step*0.5);
+		y += step;
+	}
 }
 
 // Key Controls
-var keysPressed = {};
+var keystate = {};
 
 window.addEventListener('keydown', function (event) {
-	keysPressed[event.keyCode] = true;
+	keystate[event.keyCode] = true;
 });
 
 window.addEventListener("keyup", function (event) {
-	delete keysPressed[event.keyCode];
+	delete keystate[event.keyCode];
 });
 
 
@@ -42,7 +65,7 @@ window.addEventListener("keyup", function (event) {
 function Paddle(x, y) {
 	this.x = x;
 	this.y = y;
-	this.color = "#846863";
+	this.color = "#358C99";
 	this.width = 15;
 	this.height = 100;
 	this.velocity_y = 10;
@@ -58,28 +81,26 @@ function Paddle(x, y) {
 // Move the vertical distance 'dy'
 Paddle.prototype.move = function (dy) {
 	this.y += dy;
-	
+
 	// must account for the new edge positions
 	this.edge.top += dy;
-	this.edge.bottom += dy;	
+	this.edge.bottom += dy;
 	this.velocity_y += dy;
-}
+};
 
 Paddle.prototype.update = function () {
-	for (var key in keysPressed) {
+	for (var key in keystate) {
 		var val = Number(key);
 		if (val === 38) {
-			// Move 5 pixels on the y axis towards the origin
-			// Only if the paddle y position equals 30 or more pixels (still has room to move 10 pixels to top boundary)
-			if (human.paddle.y >= 25) {
+			// Only if the paddle y position equals 5 or more pixels (still has room to move 5 pixels to top boundary)
+			if (human.paddle.y >= 5) {
 				human.paddle.move(-5);
 			}
 		}
 		// down arrow
 		if (val === 40) {
-			// Move 5 pixels on the y axis away from the origin 
-			// Only if the paddle y position equals 370 or fewer pixels (still has room to move 10 pixels to bottom boundary)
-			if (human.paddle.y <= 375) {
+			// Only if the paddle bottom (y position plus height) equals 495 or fewer pixels (still has room to move 5 pixels to bottom boundary)
+			if ((human.paddle.y + human.paddle.height) <= 495) {
 				human.paddle.move(5);
 			}
 		}
@@ -91,68 +112,81 @@ Paddle.prototype.render = function () {
 	context.beginPath();
 	context.fillStyle = this.color;
 	context.fillRect(this.x, this.y, this.width, this.height);
-}
-
-function onKeyDown(e) {
-	// up arrow
-	if (e.keyCode === 38) {
-		// Move 5 pixels on the y axis towards the origin
-		// Only if the paddle y position equals 30 or more pixels (still has room to move 10 pixels to top boundary)
-		if (human.paddle.y >= 25) {
-			human.paddle.move(-5);
-		}
-	}
-	// down arrow
-	if (e.keyCode === 40) {
-		// Move 5 pixels on the y axis away from the origin 
-		// Only if the paddle y position equals 370 or fewer pixels (still has room to move 10 pixels to bottom boundary)
-		if (human.paddle.y <= 375) {
-			human.paddle.move(5);
-		}
-	}
-}
+};
 
 function Human() {
-	this.paddle = new Paddle(30, 200);
+	this.paddle = new Paddle(0, 200);
 }
 
 function Computer() {
-	this.paddle = new Paddle(605, 200);
+	this.paddle = new Paddle(735, 200);
 }
+
+// Separate move function for computer because of the different paddle speed
+Computer.prototype.move = function (dy) {
+	this.paddle.y += dy;
+	this.paddle.edge.top += dy;
+	this.paddle.edge.bottom += dy;
+	this.paddle.velocity_y += dy;
+};
+
+Computer.prototype.update = function (ball) {
+
+	// Move computer paddle based on ball's vertical position
+	var computer_y_dest = ball.y;
+
+	var diff = -((this.paddle.y + (this.paddle.height * 0.5)) - computer_y_dest);
+	if (diff < 0 && diff < -4) { 
+		diff = -5;
+	} else if (diff > 0 && diff > 4) { 
+		diff = 5;
+	}
+	this.paddle.move(diff*0.85);
+	if (this.paddle.y < 0) {
+		this.paddle.y = 0;
+	} else if (this.paddle.y + this.paddle.height > H) {
+		this.paddle.y = (H - this.paddle.height);
+	}
+
+
+};
 
 var human = new Human();
 var computer = new Computer();
 
-// Function to generate random number (between -2 and 2) for the initial y component of the velocity
+// Function to generate random number (between -5 and 5) for the initial y component of the velocity
 // The initial x component of velocity will be the same in all cases
-function randomVelocity(){
-	var num = Math.floor(Math.random()*5) + 1; // this will get a number between 1 and 3;
-	num *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
+function randomVelocity() {
+	var num = Math.floor(Math.random() * 5) + 1; // this will get a number between 1 and 5;
+	num *= Math.floor(Math.random() * 2) == 1 ? 1 : -1; // this will add minus sign in 50% of cases
 	return num;
 }
 
 // Ball Object Constructor
 function Ball() {
-	this.x = 325;
-	this.y = 250;
-	this.color = '#AC4E7D';
-	this.radius = 10;
+	this.x = W/2;
+	this.y = H/2;
+	this.color = '#CC5B93';
+	this.radius = 8;
+	this.speed = 8;
 
 	this.edge = {
 		right: this.x + 10,
 		left: this.x - 10,
 		top: this.y - 10,
 		bottom: this.y + 10
-	}
+	};
 
-	this.velocity_x = -3;
+	this.velocity_x = this.speed;
+//	this.velocity_x = 0;
 	this.velocity_y = randomVelocity();
+	//	this.velocity_y = 20;
 }
 
 Ball.prototype.render = function () {
 	context.fillStyle = this.color;
 	context.beginPath();
-	context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+	context.arc(this.x, this.y, this.radius, 0, 2 * pi, false);
 	context.fill();
 };
 
@@ -160,65 +194,136 @@ Ball.prototype.render = function () {
 var ball = new Ball();
 
 Ball.prototype.update = function (human, computer) {
-	var p1 = human.paddle;
-	var p2 = computer.paddle;
 
 	this.x += this.velocity_x;
 	this.y += this.velocity_y;
-
-	this.edge.left += this.velocity_x;
-	this.edge.right += this.velocity_x;
-
-	this.edge.top += this.velocity_y;
-	this.edge.bottom += this.velocity_y;
-
-	// If ball's left edge is equal to the right edge of the paddle
-	// AND if the ball if within the paddles top and bottom edges ---> COLLISION
-	if (this.edge.left === p1.edge.right){
-		if (this.edge.top < p1.edge.bottom && this.edge.bottom > p1.edge.top) {
-			console.log('collision detected');
-			this.velocity_x = -this.velocity_x;
-		}
-		else {
-			console.log('missed the paddle');
-		}
-	}
-
-	if (this.edge.right === p2.edge.left){
-		if (this.edge.top < p2.edge.bottom && this.edge.bottom > p2.edge.top) {
-			console.log('collision detected');
-			this.velocity_x = -this.velocity_x;
-		}
-		else {
-			console.log('missed the paddle');
-		}
-	}
 	
-	// Collision with top boundary
-	if (this.edge.top === 20){
-		console.log('Collision with top boundary');
+	// Collision with boundaries
+	if (this.y < 0 || (this.y + this.radius) > H) {
+		var offset = this.velocity_y < 0 ? 0 - this.y : H - (this.y + this.radius);
+		this.y += 2 * offset;
 		this.velocity_y = -this.velocity_y;
 	}
 	
-	// Collision with bottom boundary
-	if (this.edge.bottom === 480){
-		console.log('Collision with bottom boundary');
-		this.velocity_y = -this.velocity_y;
+	
+	var intersect = function(px, py, pw, ph, bx, by, bw, bh) {
+		return px < bx + bw && py < by + bh && bx < px + pw && by < py + ph;
+	};
+	
+	// determine which paddle the ball is approaching
+	var paddle;
+	if (this.velocity_x < 0){
+		paddle = human.paddle;
+	}
+	else {
+		paddle = computer.paddle;
+	}
+	
+	if (intersect(paddle.x, paddle.y, paddle.width, paddle.height, this.x, this.y, this.radius, this.radius)){
+		this.x = paddle === human.paddle ? human.paddle.x + human.paddle.width : computer.paddle.x - this.radius;
+		var n = (this.y + this.radius - paddle.y)/(paddle.height + this.radius);
+		var phi = 0.25*pi*(2*n - 1);
+		if (paddle === human.paddle){
+			this.velocity_x = (this.speed*Math.cos(phi));
+			this.velocity_y = this.speed*Math.sin(phi);
+		}
+		else if (paddle === computer.paddle) {
+			this.velocity_x = (this.speed*Math.cos(phi));
+			this.velocity_y = this.speed*Math.sin(phi);
+		}	
+		
+	}
+	else {
+		if (paddle === human.paddle){
+			if ((this.x) < 0) {
+				score.computer ++;
+				this.x = W/2;
+				this.y = H/2;
+				this.velocity_y = 0;
+				if (score.computer === 10){
+					document.getElementById('end-game-text').innerHTML = "Sorry, you lost :\(";
+					document.getElementById('end-game').style.visibility = "visible";
+					score.human = 0;
+				  score.computer = 0;
+				}
+			}
+		}
+		else {
+			if ((this.x + this.radius) > W){
+				score.human ++;
+				this.x = W/2;
+				this.y = H/2;
+				this.velocity_y = 0;
+				if (score.human === 10){
+					document.getElementById('end-game-text').innerHTML = "Congratulations, you won!";
+					document.getElementById('end-game').style.visibility = "visible";
+					score.human = 0;
+				  score.computer = 0;
+				}
+			}
+		}
+	}
+
+//		 If ball's left edge is equal to the right edge of the paddle
+//		 AND if the ball if within the paddles top and bottom edges ---> COLLISION
+	
+//	if ((this.x) <= human.paddle.x + human.paddle.width) {
+//		console.log('plane is crossed');
+//		if ((this.y - 10) < (human.paddle.y + human.paddle.height) && (this.y + 10) > human.paddle.y) {
+//			console.log('collision with human paddle detected');
+//
+//			this.x = (human.paddle.x + human.paddle.width);
+//			this.speed += (human.paddle.velocity_y/2);
+//			this.velocity_x = -this.velocity_x;
+//			this.velocity_y = -this.velocity_y;
+//
+//		} else {
+//			console.log('missed the paddle, point for computer');
+////			this.x = 325;
+////			this.y = 250;
+//		}
+//	}
+//
+	if ((this.x + this.radius) >= computer.paddle.x) {
+		if ((this.y - this.radius) < (computer.paddle.y + computer.paddle.height) && (this.y + this.radius) > computer.paddle.y) {
+			console.log('collision with computer paddle detected');
+
+			this.velocity_x = -this.velocity_x;
+			this.velocity_y = -this.velocity_y;
+
+		} else {
+			console.log('missed the paddle, point for human');
+//			this.x = 325;
+//			this.y = 250;
+		}
 	}
 
 };
 
+//Ball.prototype.serve = function(side) {
+//	var r = Math.random();
+//	this.x = side === 1 ? human.paddle.x : this.radius;
+//	this.y = (480 - this.radius) * r;
+//	
+//	var phi = 0.1 * pi * (1 - 2*r);
+//	this.velocity_x = side*this.speed * Math.cos(phi);
+//	this.velocity_y = this.speed * Math.sin(phi);
+//};
+
 // Update function which runs during repaint with updated positions
+
 var update = function () {
 	ball.update(human, computer);
 	human.paddle.update();
+	computer.update(ball);
 };
 
 var render = function () {
 	paintCanvas();
+	drawScore();
 	human.paddle.render();
 	computer.paddle.render();
-	drawBoundaries();
+	drawNet();
 	ball.render();
 };
 
@@ -241,6 +346,5 @@ var animate = window.requestAnimationFrame ||
 	};
 
 window.onload = function () {
-	init();
 	step();
 };
