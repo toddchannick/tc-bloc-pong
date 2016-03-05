@@ -168,7 +168,7 @@ function Ball() {
 	this.y = H/2;
 	this.color = '#CC5B93';
 	this.radius = 8;
-	this.speed = 8;
+	this.speed = 9;
 
 	this.edge = {
 		right: this.x + 10,
@@ -239,6 +239,7 @@ Ball.prototype.update = function (human, computer) {
 				score.computer ++;
 				this.x = W/2;
 				this.y = H/2;
+				human.paddle.y = 200;
 				this.velocity_y = 0;
 				if (score.computer === 10){
 					document.getElementById('end-game-text').innerHTML = "Sorry, you lost :\(";
@@ -253,6 +254,7 @@ Ball.prototype.update = function (human, computer) {
 				score.human ++;
 				this.x = W/2;
 				this.y = H/2;
+				human.paddle.y = 200;
 				this.velocity_y = 0;
 				if (score.human === 10){
 					document.getElementById('end-game-text').innerHTML = "Congratulations, you won!";
